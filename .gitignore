@@ -1,0 +1,4 @@
+# local notes, not part of the project
+/w*
+# private local MySQL server
+/.mysql/
