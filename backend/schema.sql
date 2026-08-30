@@ -73,3 +73,44 @@ CREATE TABLE request_applications (
   created_on      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_app_student FOREIGN KEY (student_user_id) REFERENCES students(user_id)
 );
+
+CREATE TABLE documents (
+  request_id  INT          NOT NULL,
+  doc_no      INT          NOT NULL,
+  file_name   VARCHAR(255) NOT NULL,
+  stored_path VARCHAR(255) NOT NULL,
+  file_hash   CHAR(64)     NOT NULL,
+  uploaded_on DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (request_id, doc_no),
+  CONSTRAINT fk_docs_app FOREIGN KEY (request_id) REFERENCES request_applications(request_id),
+  CONSTRAINT chk_docs_no CHECK (doc_no > 0)
+);
+
+CREATE TABLE comments (
+  request_id        INT      NOT NULL,
+  comment_no        INT      NOT NULL,
+  author_user_id    INT      NOT NULL,
+  message           TEXT     NOT NULL,
+  posted_on         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  parent_comment_no INT      NULL,
+  PRIMARY KEY (request_id, comment_no),
+  CONSTRAINT fk_comments_app    FOREIGN KEY (request_id) REFERENCES request_applications(request_id),
+  CONSTRAINT fk_comments_author FOREIGN KEY (author_user_id) REFERENCES users(user_id),
+  -- composite self-reference: a reply can only point at a comment of the SAME application
+  CONSTRAINT fk_comments_parent FOREIGN KEY (request_id, parent_comment_no)
+    REFERENCES comments(request_id, comment_no),
+  CONSTRAINT chk_comments_parent CHECK (parent_comment_no IS NULL OR parent_comment_no < comment_no)
+);
+
+CREATE TABLE reviews (
+  request_id      INT      NOT NULL,
+  step_no         INT      NOT NULL,
+  faculty_user_id INT      NOT NULL,
+  assigned_on     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  decision        ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  decided_on      DATETIME NULL,
+  PRIMARY KEY (request_id, step_no),
+  CONSTRAINT fk_reviews_app     FOREIGN KEY (request_id) REFERENCES request_applications(request_id),
+  CONSTRAINT fk_reviews_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id),
+  CONSTRAINT chk_reviews_decided CHECK ((decision = 'PENDING') = (decided_on IS NULL))
+);
