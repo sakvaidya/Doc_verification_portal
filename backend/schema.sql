@@ -114,3 +114,28 @@ CREATE TABLE reviews (
   CONSTRAINT fk_reviews_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id),
   CONSTRAINT chk_reviews_decided CHECK ((decision = 'PENDING') = (decided_on IS NULL))
 );
+
+-- An approved step and the key it was signed with. Kept out of signatures because
+-- every document of a step is signed with the same key (key_id depends on the step only).
+CREATE TABLE approvals (
+  request_id INT NOT NULL,
+  step_no    INT NOT NULL,
+  key_id     INT NOT NULL,
+  PRIMARY KEY (request_id, step_no),
+  CONSTRAINT fk_approvals_review FOREIGN KEY (request_id, step_no) REFERENCES reviews(request_id, step_no),
+  CONSTRAINT fk_approvals_key    FOREIGN KEY (key_id) REFERENCES key_pairs(key_id)
+);
+
+-- Relationship between an approved review step and a document.
+CREATE TABLE signatures (
+  signature_id    INT AUTO_INCREMENT PRIMARY KEY,
+  request_id      INT      NOT NULL,
+  step_no         INT      NOT NULL,
+  doc_no          INT      NOT NULL,
+  content_hash    CHAR(64) NOT NULL,
+  signature_value TEXT     NOT NULL,
+  -- referencing approvals (not reviews) means a rejected step can never hold signatures
+  CONSTRAINT fk_sig_approval FOREIGN KEY (request_id, step_no) REFERENCES approvals(request_id, step_no),
+  CONSTRAINT fk_sig_doc      FOREIGN KEY (request_id, doc_no)  REFERENCES documents(request_id, doc_no),
+  CONSTRAINT uq_sig_step_doc UNIQUE (request_id, step_no, doc_no)
+);
