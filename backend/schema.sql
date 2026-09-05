@@ -139,3 +139,40 @@ CREATE TABLE signatures (
   CONSTRAINT fk_sig_doc      FOREIGN KEY (request_id, doc_no)  REFERENCES documents(request_id, doc_no),
   CONSTRAINT uq_sig_step_doc UNIQUE (request_id, step_no, doc_no)
 );
+
+-- ---------- Disjoint specialisation: a user is in exactly one subtype ----------
+
+DELIMITER //
+CREATE TRIGGER trg_students_disjoint BEFORE INSERT ON students FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM faculty WHERE user_id = NEW.user_id)
+     OR EXISTS (SELECT 1 FROM admins WHERE user_id = NEW.user_id) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User already has a different role';
+  END IF;
+END//
+CREATE TRIGGER trg_faculty_disjoint BEFORE INSERT ON faculty FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM students WHERE user_id = NEW.user_id)
+     OR EXISTS (SELECT 1 FROM admins WHERE user_id = NEW.user_id) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User already has a different role';
+  END IF;
+END//
+CREATE TRIGGER trg_admins_disjoint BEFORE INSERT ON admins FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM students WHERE user_id = NEW.user_id)
+     OR EXISTS (SELECT 1 FROM faculty WHERE user_id = NEW.user_id) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User already has a different role';
+  END IF;
+END//
+
+-- An approval must be for an APPROVED step and use a key of the faculty member assigned to it.
+CREATE TRIGGER trg_approvals_check BEFORE INSERT ON approvals FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM reviews r JOIN key_pairs k ON k.faculty_user_id = r.faculty_user_id
+    WHERE r.request_id = NEW.request_id AND r.step_no = NEW.step_no
+      AND r.decision = 'APPROVED' AND k.key_id = NEW.key_id) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Approval must use the assigned faculty key on an approved step';
+  END IF;
+END//
+DELIMITER ;
