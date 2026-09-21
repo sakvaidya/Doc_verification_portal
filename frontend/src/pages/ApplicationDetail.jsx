@@ -88,6 +88,7 @@ function ReviewStep({ step, user, requestId, run }) {
       <p className="muted small">
         Assigned {step.assigned_on}
         {step.decided_on && ` · decided ${step.decided_on}`}
+        {step.prev_step_no && ` · forwarded from step ${step.prev_step_no}`}
       </p>
       {step.signatures.length > 0 && (
         <ul className="list small">
