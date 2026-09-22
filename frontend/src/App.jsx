@@ -3,6 +3,7 @@ import { getSession } from './api/client';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ApplicationDetail from './pages/ApplicationDetail';
 import Verify from './pages/Verify';
 
 function Private({ children }) {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify" element={<Verify />} />
         <Route path="/verify/:signatureId" element={<Verify />} />
+        <Route path="/applications/:id" element={<Private><ApplicationDetail /></Private>} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Layout>
