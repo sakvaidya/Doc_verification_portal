@@ -34,7 +34,7 @@ async function latestByRequests(requestIds) {
 
 async function find(requestId, stepNo, db = pool) {
   const [rows] = await db.query(
-    'SELECT * FROM reviews WHERE request_id = ? AND step_no = ?',
+    'SELECT * FROM reviews WHERE request_id = ? AND step_no = ? FOR UPDATE',
     [requestId, stepNo]
   );
   return rows[0];
@@ -42,7 +42,7 @@ async function find(requestId, stepNo, db = pool) {
 
 async function findLatest(requestId, db = pool) {
   const [rows] = await db.query(
-    'SELECT * FROM reviews WHERE request_id = ? ORDER BY step_no DESC LIMIT 1',
+    'SELECT * FROM reviews WHERE request_id = ? ORDER BY step_no DESC LIMIT 1 FOR UPDATE',
     [requestId]
   );
   return rows[0];
