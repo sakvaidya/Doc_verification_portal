@@ -7,6 +7,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api', require('./routes/auth.routes'));
+app.use('/api/applications', require('./routes/application.routes'));
+app.use('/api/documents', require('./routes/document.routes'));
 app.use('/api/verify', require('./routes/verify.routes'));
 
 app.use(errorHandler);
