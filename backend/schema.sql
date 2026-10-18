@@ -59,7 +59,8 @@ CREATE TABLE key_pairs (
   generated_on    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   is_active       BOOLEAN  NOT NULL DEFAULT TRUE,
   algorithm       VARCHAR(30) NOT NULL DEFAULT 'RSA-SHA256',
-  CONSTRAINT fk_keys_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id)
+  CONSTRAINT fk_keys_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id),
+  INDEX idx_keys_faculty_active (faculty_user_id, is_active)
 );
 
 -- ---------- Applications and their weak entities ----------
@@ -112,7 +113,8 @@ CREATE TABLE reviews (
   PRIMARY KEY (request_id, step_no),
   CONSTRAINT fk_reviews_app     FOREIGN KEY (request_id) REFERENCES request_applications(request_id),
   CONSTRAINT fk_reviews_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id),
-  CONSTRAINT chk_reviews_decided CHECK ((decision = 'PENDING') = (decided_on IS NULL))
+  CONSTRAINT chk_reviews_decided CHECK ((decision = 'PENDING') = (decided_on IS NULL)),
+  INDEX idx_reviews_faculty (faculty_user_id)
 );
 
 -- An approved step and the key it was signed with. Kept out of signatures because
