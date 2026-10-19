@@ -179,6 +179,18 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ---------- Read-only audit view (handy in the MySQL shell) ----------
+
+CREATE VIEW v_signature_audit AS
+SELECT s.signature_id, s.request_id, a.subject, s.step_no, d.file_name,
+       CONCAT(u.first_name, ' ', u.last_name) AS signed_by, r.decided_on AS signed_on, ap.key_id
+FROM signatures s
+JOIN request_applications a ON a.request_id = s.request_id
+JOIN documents d  ON d.request_id = s.request_id AND d.doc_no = s.doc_no
+JOIN approvals ap ON ap.request_id = s.request_id AND ap.step_no = s.step_no
+JOIN reviews r    ON r.request_id = s.request_id AND r.step_no = s.step_no
+JOIN users u     ON u.user_id = r.faculty_user_id;
+
 -- ---------- Seed data (password for everyone: password123) ----------
 
 SET @pw = '$2b$10$tb0QYAxyZp0GvWGwN8PEjOncxWhvw3ZEA/6Uc89RYSr4coibHTs92';
