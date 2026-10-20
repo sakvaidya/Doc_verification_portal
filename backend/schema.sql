@@ -59,7 +59,8 @@ CREATE TABLE key_pairs (
   generated_on    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   is_active       BOOLEAN  NOT NULL DEFAULT TRUE,
   algorithm       VARCHAR(30) NOT NULL DEFAULT 'RSA-SHA256',
-  CONSTRAINT fk_keys_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id)
+  CONSTRAINT fk_keys_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id),
+  INDEX idx_keys_faculty_active (faculty_user_id, is_active)
 );
 
 -- ---------- Applications and their weak entities ----------
@@ -112,7 +113,8 @@ CREATE TABLE reviews (
   PRIMARY KEY (request_id, step_no),
   CONSTRAINT fk_reviews_app     FOREIGN KEY (request_id) REFERENCES request_applications(request_id),
   CONSTRAINT fk_reviews_faculty FOREIGN KEY (faculty_user_id) REFERENCES faculty(user_id),
-  CONSTRAINT chk_reviews_decided CHECK ((decision = 'PENDING') = (decided_on IS NULL))
+  CONSTRAINT chk_reviews_decided CHECK ((decision = 'PENDING') = (decided_on IS NULL)),
+  INDEX idx_reviews_faculty (faculty_user_id)
 );
 
 -- An approved step and the key it was signed with. Kept out of signatures because
@@ -176,6 +178,18 @@ BEGIN
   END IF;
 END//
 DELIMITER ;
+
+-- ---------- Read-only audit view (handy in the MySQL shell) ----------
+
+CREATE VIEW v_signature_audit AS
+SELECT s.signature_id, s.request_id, a.subject, s.step_no, d.file_name,
+       CONCAT(u.first_name, ' ', u.last_name) AS signed_by, r.decided_on AS signed_on, ap.key_id
+FROM signatures s
+JOIN request_applications a ON a.request_id = s.request_id
+JOIN documents d  ON d.request_id = s.request_id AND d.doc_no = s.doc_no
+JOIN approvals ap ON ap.request_id = s.request_id AND ap.step_no = s.step_no
+JOIN reviews r    ON r.request_id = s.request_id AND r.step_no = s.step_no
+JOIN users u     ON u.user_id = r.faculty_user_id;
 
 -- ---------- Seed data (password for everyone: password123) ----------
 

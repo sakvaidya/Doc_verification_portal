@@ -21,6 +21,31 @@ file and verification fails.
 Request flow is strictly `route → controller → service → repository → MySQL`.
 SQL only lives in `backend/src/repositories/`; `req`/`res` only in controllers and middleware.
 
+## Database design
+
+The schema in [`backend/schema.sql`](backend/schema.sql) is a direct translation of the E-R model:
+
+| E-R concept | Table(s) | How it is enforced |
+|---|---|---|
+| `USER` supertype with disjoint subtypes | `users` → `students`, `faculty`, `admins` | subtype PK is also FK to `users`; triggers stop a user being in two subtypes |
+| Faculty owns key pairs (1:N) | `key_pairs` | FK to `faculty`, `is_active` flag |
+| Student raises applications (1:N) | `request_applications` | FK to `students`; **no status column** (derived) |
+| Weak entity `DOCUMENT` | `documents` | PK `(request_id, doc_no)` |
+| Weak entity `COMMENT` (recursive reply) | `comments` | PK `(request_id, comment_no)`; composite self-FK `(request_id, parent_comment_no)` keeps replies inside the same application |
+| Weak entity `REVIEW` (recursive "forwarded from") | `reviews` | PK `(request_id, step_no)`; "forwarded from" is always step n − 1, so it is derived, not stored |
+| Approved review step | `approvals` | PK/FK `(request_id, step_no)` → reviews, FK `key_id`; trigger checks the step is APPROVED and the key belongs to its faculty |
+| `SIGNATURE` relates approved step × document | `signatures` | FKs `(request_id, step_no)` → approvals and `(request_id, doc_no)` → documents; UNIQUE per step × document |
+
+Every table is in 3NF (in fact BCNF). Derived values (application status, the "forwarded from"
+step, signing time) are computed, not stored.
+
+Also included: CHECK constraints (graduation year, `decided_on` set iff decided), indexes for the
+faculty dashboards, and a `v_signature_audit` view for poking around in the MySQL shell:
+
+```sql
+SELECT * FROM doc_portal.v_signature_audit;
+```
+
 ## Prerequisites
 
 - Node.js 18+ and npm
