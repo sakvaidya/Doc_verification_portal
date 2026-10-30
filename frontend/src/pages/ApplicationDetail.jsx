@@ -94,8 +94,8 @@ function ReviewStep({ step, user, requestId, run }) {
         <ul className="list small">
           {step.signatures.map((g) => (
             <li key={g.signature_id}>
-              Signature <code>{g.signature_id}</code> on {g.file_name} —{' '}
-              <Link to={`/verify/${g.signature_id}`}>verify</Link>
+              Signature <code className="code-break">{g.content_hash}</code> on {g.file_name} —{' '}
+              <Link to={`/verify/${g.content_hash}`}>verify</Link>
             </li>
           ))}
         </ul>

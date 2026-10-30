@@ -6,18 +6,18 @@ import Field from '../components/Field';
 import Button from '../components/Button';
 
 export default function Verify() {
-  const { signatureId } = useParams();
+  const { code } = useParams();
   const navigate = useNavigate();
-  const [input, setInput] = useState(signatureId || '');
+  const [input, setInput] = useState(code || '');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!signatureId) return;
+    if (!code) return;
     setResult(null);
     setError('');
-    api.get(`/verify/${signatureId}`).then(setResult).catch((e) => setError(e.message));
-  }, [signatureId]);
+    api.get(`/verify/${code}`).then(setResult).catch((e) => setError(e.message));
+  }, [code]);
 
   function submit(e) {
     e.preventDefault();
@@ -27,7 +27,7 @@ export default function Verify() {
   return (
     <Card title="Verify a signature">
       <form onSubmit={submit} className="inline-form">
-        <Field label="Signature ID" value={input} onChange={(e) => setInput(e.target.value)} required />
+        <Field label="Verification code" value={input} onChange={(e) => setInput(e.target.value)} required />
         <Button type="submit">Verify</Button>
       </form>
       {error && <p className="error">{error}</p>}
@@ -44,6 +44,11 @@ export default function Verify() {
             <dt>Application / step</dt><dd>#{result.requestId} / step {result.stepNo}</dd>
             <dt>Algorithm</dt><dd>{result.algorithm}</dd>
           </dl>
+          {result.valid && (
+            <Button onClick={() => api.download(`/verify/${code}/download`, result.fileName).catch((e) => setError(e.message))}>
+              Download signed file
+            </Button>
+          )}
         </div>
       )}
     </Card>

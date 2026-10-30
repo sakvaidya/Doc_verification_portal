@@ -88,3 +88,5 @@ input[type="file"].input { padding: 6px var(--s2); }
   .form.grid { grid-template-columns: 1fr; }
   .details { grid-template-columns: 1fr; }
 }
+
+.code-break { word-break: break-all; }

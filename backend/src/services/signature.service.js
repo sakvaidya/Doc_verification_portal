@@ -27,8 +27,8 @@ async function signStep(conn, requestId, stepNo, facultyUserId) {
 }
 
 // Public check: recompute the hash from the file as it is on disk right now.
-async function verifySignature(signatureId) {
-  const s = await signatureRepo.findForVerify(signatureId);
+async function check(code) {
+  const s = await signatureRepo.findForVerify(code);
   if (!s) throw new AppError('Signature not found', 404);
 
   const filePath = path.join(ROOT, s.stored_path);
@@ -37,7 +37,11 @@ async function verifySignature(signatureId) {
     const hash = contentHash(filePath, s.request_id, s.doc_no, s.step_no, s.faculty_user_id);
     valid = hash === s.content_hash && verify(hash, s.public_key, s.signature_value);
   }
+  return { s, valid, filePath };
+}
 
+async function verifySignature(code) {
+  const { s, valid } = await check(code);
   return {
     valid,
     signatureId: s.signature_id,
@@ -51,4 +55,11 @@ async function verifySignature(signatureId) {
   };
 }
 
-module.exports = { signStep, verifySignature };
+// Anyone holding the code may download the signed file, but only while it still verifies.
+async function getVerifiedFile(code) {
+  const { s, valid, filePath } = await check(code);
+  if (!valid) throw new AppError('Signature is not valid, so the file cannot be downloaded', 409);
+  return { filePath, fileName: s.file_name };
+}
+
+module.exports = { signStep, verifySignature, getVerifiedFile };

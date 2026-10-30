@@ -8,7 +8,7 @@ After a decision the student can **forward** the same application to the next fa
 (guide → HOD → dean), so signatures pile up on the same files in order.
 
 Signatures are real RSA-2048 / SHA-256 signatures over the file's bytes, not images. Anyone can
-paste a signature ID into the public **Verify** page; the server re-reads the file from disk,
+paste a signature's verification code into the public **Verify** page; the server re-reads the file from disk,
 recomputes the hash and checks it against the signer's public key. Change one byte of the
 file and verification fails.
 
@@ -113,10 +113,10 @@ Password for every account: `password123`
    Status shows `PENDING WITH Kavita Iyer`.
 2. **Discuss.** Log in as `kavita@faculty.edu`; the application is in *Assigned to me*. Open it
    and post a comment. Log back in as Aarav and reply to it.
-3. **Approve.** As Kavita, click *Approve & sign*. Step 1 now lists one signature ID per file.
+3. **Approve.** As Kavita, click *Approve & sign*. Step 1 now lists one signature (with its verification code) per file.
 4. **Forward.** As Aarav, use *Forward to…* to send it to *Rajesh Nair*. As Rajesh, approve.
    The timeline now has two approved steps, each with its own signatures on the same files.
-5. **Verify.** Open *Verify* (no login needed), paste a signature ID → green **VALID** with the
+5. **Verify.** Open *Verify* (no login needed), click *verify* next to a signature (or paste its code) → green **VALID** with the
    file name, signer and timestamp.
 6. **Tamper.** Find the stored file and change it:
 
@@ -128,7 +128,7 @@ Password for every account: `password123`
    echo "one extra line" >> backend/uploads/<stored file name for the .txt>
    ```
 
-   Verify the same signature ID again → red **INVALID**.
+   Verify the same code again → red **INVALID**.
 
 ## How signing works
 
@@ -143,6 +143,11 @@ Mixing in the ids means a signature is bound to one file, one application, one r
 one signer — it can't be copied onto another document or replayed on another step.
 Verification recomputes the hash from the file currently on disk and checks it with the stored
 public key.
+
+The stored `content_hash` doubles as the public **verification code**: it is 64 hex characters
+that can't be guessed without the file itself, so (unlike the sequential `signature_id`) nobody can
+walk through codes to find other people's documents. Whoever holds a code can download the signed
+file from the Verify page, but only while the signature is still valid.
 
 ## API
 
@@ -163,7 +168,8 @@ POST /api/reviews/:id/:stepNo/approve
 POST /api/reviews/:id/:stepNo/reject    { remark? }   (remark is posted as a comment)
 
 GET  /api/documents/:id/:docNo/download
-GET  /api/verify/:signatureId           public
+GET  /api/verify/:code                  public; :code = the signature's content_hash
+GET  /api/verify/:code/download         public; only while the signature is valid
 ```
 
 This is a demo: private keys are stored in the database in plain text, which a real system

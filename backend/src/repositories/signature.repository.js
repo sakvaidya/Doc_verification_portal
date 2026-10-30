@@ -10,7 +10,7 @@ async function create(s, db = pool) {
 
 async function listByRequest(requestId) {
   const [rows] = await pool.query(
-    `SELECT s.signature_id, s.step_no, s.doc_no, r.decided_on AS signed_on, d.file_name
+    `SELECT s.signature_id, s.step_no, s.doc_no, s.content_hash, r.decided_on AS signed_on, d.file_name
      FROM signatures s
      JOIN documents d ON d.request_id = s.request_id AND d.doc_no = s.doc_no
      JOIN reviews r   ON r.request_id = s.request_id AND r.step_no = s.step_no
@@ -20,8 +20,9 @@ async function listByRequest(requestId) {
   return rows;
 }
 
-// Everything needed to re-verify one signature from scratch.
-async function findForVerify(signatureId) {
+// Everything needed to re-verify one signature from scratch. Looked up by content_hash, which
+// works as an unguessable verification code (unlike the sequential signature_id).
+async function findForVerify(code) {
   const [rows] = await pool.query(
     `SELECT s.*, d.file_name, d.stored_path, r.faculty_user_id, r.decided_on AS signed_on,
             k.public_key, k.algorithm,
@@ -33,8 +34,8 @@ async function findForVerify(signatureId) {
      JOIN key_pairs k  ON k.key_id = ap.key_id
      JOIN faculty f   ON f.user_id = r.faculty_user_id
      JOIN users u     ON u.user_id = r.faculty_user_id
-     WHERE s.signature_id = ?`,
-    [signatureId]
+     WHERE s.content_hash = ?`,
+    [code]
   );
   return rows[0];
 }

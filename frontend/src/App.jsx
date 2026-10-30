@@ -19,7 +19,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify" element={<Verify />} />
-        <Route path="/verify/:signatureId" element={<Verify />} />
+        <Route path="/verify/:code" element={<Verify />} />
         <Route path="/" element={<Private><Dashboard /></Private>} />
         <Route path="/new" element={<Private><NewApplication /></Private>} />
         <Route path="/applications/:id" element={<Private><ApplicationDetail /></Private>} />
