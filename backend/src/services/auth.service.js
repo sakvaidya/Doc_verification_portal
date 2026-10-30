@@ -10,7 +10,7 @@ const facultyRepo = require('../repositories/faculty.repository');
 const keyPairRepo = require('../repositories/keypair.repository');
 
 const REQUIRED = {
-  student: ['sapId', 'department', 'division', 'yearOfGraduation'],
+  student: ['misId', 'department', 'division', 'yearOfGraduation'],
   faculty: ['facultyId', 'designation', 'department'],
 };
 

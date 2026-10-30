@@ -27,7 +27,7 @@ CREATE TABLE user_phones (
 
 CREATE TABLE students (
   user_id            INT PRIMARY KEY,
-  sap_id             VARCHAR(20) NOT NULL UNIQUE,
+  mis_id             VARCHAR(20) NOT NULL UNIQUE,
   department         VARCHAR(80) NOT NULL,
   division           VARCHAR(5)  NOT NULL,
   year_of_graduation SMALLINT    NOT NULL,
@@ -318,7 +318,7 @@ INSERT INTO user_phones (user_id, phone_no) VALUES
   (1, '9000000001'), (1, '9000000011'), (2, '9000000002'),
   (3, '9000000003'), (4, '9000000004'), (5, '9000000005');
 
-INSERT INTO students (user_id, sap_id, department, division, year_of_graduation) VALUES
+INSERT INTO students (user_id, mis_id, department, division, year_of_graduation) VALUES
   (1, '60001220001', 'Computer Engineering', 'A', 2027),
   (2, '60001220002', 'Information Technology', 'B', 2026);
 

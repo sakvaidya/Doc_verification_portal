@@ -10,7 +10,7 @@ const COMMON = [
   ['email', 'Email', 'email'], ['phoneNo', 'Phone numbers (optional, comma-separated)'], ['password', 'Password', 'password'],
 ];
 const BY_ROLE = {
-  student: [['sapId', 'SAP ID'], ['department', 'Department'], ['division', 'Division'],
+  student: [['misId', 'MIS ID'], ['department', 'Department'], ['division', 'Division'],
     ['yearOfGraduation', 'Year of graduation', 'number']],
   faculty: [['facultyId', 'Faculty ID'], ['designation', 'Designation'], ['department', 'Department']],
 };
